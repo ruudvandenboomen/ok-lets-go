@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "okey-lets-go"
+version = "0.1.0"
+description = ""
+authors = ["Ruud van den Boomen <ruud.van.den.boomen@sendcloud.com>"]
+readme = "README.md"
+packages = [{include = "okey_lets_go"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Flask = "^2.3.2"
+Flask-SocketIO = "^5.3.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>OK LET'S GO</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static',filename='styles/styles.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>OK LET'S GO</h1>
+        <button id="play-button">OK LET'S GO</button>
+        <button id="play-button-2">OK LET'S GO DJ</button>
+    </div>
+
+    <script type="text/javascript">
+        var socket = io.connect();
+        var audio = new Audio(window.location.origin + '/static/OK_LETS_GO.mp3');
+        var audio2 = new Audio(window.location.origin + '/static/okay_lets_go_dj.mp3');
+
+        // Button click event handler
+        document.getElementById('play-button').addEventListener('click', function () {
+            socket.emit('play_audio');
+        });
+        document.getElementById('play-button-2').addEventListener('click', function () {
+            socket.emit('play_audio_2');
+        });
+        console.log(window.location.origin)
+        // WebSocket event handler
+        socket.on('play_audio', function () {
+            // Play the audio file
+            audio.play();
+        });
+        socket.on('play_audio_2', function () {
+            // Play the audio file
+            audio2.play();
+        });
+    </script>
+</body>
+
+</html>
