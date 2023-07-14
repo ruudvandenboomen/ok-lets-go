@@ -1,3 +1,5 @@
 /certbot/conf
 
 __pycache__/
+
+.env
