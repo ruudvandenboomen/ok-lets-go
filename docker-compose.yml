@@ -10,8 +10,10 @@ services:
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
+    networks:
+      - ok-lets-go
   nginx:
-    image: nginx:latest
+    image: nginx:1.25.1-alpine
     restart: always
     ports:
       - "80:80"
@@ -22,11 +24,16 @@ services:
       - ./certbot/www:/var/www/certbot
     depends_on:
       - app
+    networks:
+      - ok-lets-go
   certbot:
-    image: certbot/certbot
+    image: certbot/certbot:v2.5.0
     restart: always
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
       - ./certbot/cli.ini:/etc/letsencrypt/cli.ini
     command: certonly --keep-until-expiring
+networks:
+  ok-lets-go:
+    driver: bridge
