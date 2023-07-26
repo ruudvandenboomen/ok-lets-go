@@ -30,6 +30,7 @@ button {
     margin: 20px auto;
     padding: 10px 20px;
     font-size: 16px;
+    min-width: 180px;
     background-color: #4caf50;
     color: #fff;
     border: none;
