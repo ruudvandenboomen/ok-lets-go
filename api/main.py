@@ -49,6 +49,13 @@ def handle_play_audio_3():
     socketio.emit("play_audio_3")
 
 
+@socketio.on("play_audio_4")
+def handle_play_audio_4():
+    print("Playing audio")
+    # Trigger audio playback on the client side
+    socketio.emit("play_audio_4")
+
+
 @app.route("/static/<path:filename>")
 def serve_static(filename):
     return send_from_directory("static", filename)

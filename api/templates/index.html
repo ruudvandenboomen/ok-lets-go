@@ -13,6 +13,7 @@
         <button id="play-button">OK LET'S GO</button>
         <button id="play-button-2">OK LET'S GO DJ</button>
         <button id="play-button-3">OK LET'S GO ROB</button>
+        <button id="play-button-4">OK LET'S DIE</button>
     </div>
 
     <script type="text/javascript">
@@ -20,6 +21,7 @@
         var audio = new Audio(window.location.origin + '/static/OK_LETS_GO.mp3');
         var audio2 = new Audio(window.location.origin + '/static/okay_lets_go_dj.mp3');
         var audio3 = new Audio(window.location.origin + '/static/okay_lets_go_rob.mp3');
+        var audio4 = new Audio(window.location.origin + '/static/okay_lets_die.mp3');
 
         // Button click event handler
         document.getElementById('play-button').addEventListener('click', function () {
@@ -30,6 +32,9 @@
         });
         document.getElementById('play-button-3').addEventListener('click', function () {
             socket.emit('play_audio_3');
+        });
+        document.getElementById('play-button-4').addEventListener('click', function () {
+            socket.emit('play_audio_4');
         });
         console.log(window.location.origin)
         // WebSocket event handler
@@ -44,6 +49,10 @@
         socket.on('play_audio_3', function () {
             // Play the audio file
             audio3.play();
+        });
+        socket.on('play_audio_4', function () {
+            // Play the audio file
+            audio4.play();
         });
     </script>
 </body>
