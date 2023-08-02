@@ -15,7 +15,20 @@
         <button id="play-button-3">OK LET'S GO ROB</button>
         <button id="play-button-4">OK LET'S DIE</button>
     </div>
-
+    <div class="container">
+        <div class="chat-header">
+            <h1>Chat</h1>
+            <p class="chat-online">online: <span id="user-online"></span></p>
+        </div>
+        <div class="chat">
+            <div id="chat-box">
+            </div>
+        </div>
+        <form id="chat-form">
+            <input id="chat-input" type="text" placeholder="Type your message here..." class="message-input">
+            <div id="chat-input-error"></div>
+        </form>
+    </div>
     <script type="text/javascript">
         var socket = io.connect();
         var audio = new Audio(window.location.origin + '/static/OK_LETS_GO.mp3');
@@ -54,6 +67,43 @@
             // Play the audio file
             audio4.play();
         });
+        socket.on('update_online_count', function (data) {
+            document.getElementById('user-online').innerText = data.count;
+        });
+
+        socket.on('message', function (data) {
+            var chatDiv = document.getElementById('chat-box');
+            chatDiv.innerHTML += '<div class="message"><p class="user">Some user:</p><p class="content">' + data.message + '</p></div>'
+        });
+
+        // Function to handle form submission
+        function handleSubmit(event) {
+            event.preventDefault();
+
+            // Get the input value from the form
+            const inputElement = document.getElementById("chat-input");
+            const inputErrorElement = document.getElementById("chat-input-error");
+            const message = inputElement.value.trim();
+
+            // Don't send an empty message
+            if (!message) {
+                return;
+            }
+
+            const regexPattern = /\bok\b.*\b(lets|let's)\b .*\bgo\b/gi;
+            // Check if the message at least contains ok lets go.
+            if (regexPattern.test(message)) {
+                socket.emit('message', { message: message });
+                inputElement.value = '';
+                inputErrorElement.innerHTML = '';
+            } else {
+                inputErrorElement.innerHTML = '<p>Please at least use "ok lets go" in your message.</p>'
+            }
+
+        }
+        // Attach the form submission event listener
+        const formElement = document.getElementById("chat-form");
+        formElement.addEventListener("submit", handleSubmit);
     </script>
 </body>
 
