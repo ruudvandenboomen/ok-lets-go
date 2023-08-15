@@ -13,12 +13,13 @@ socketio = SocketIO(app)
 
 online_users = set()
 regex_pattern = re.compile(r"(?i)\bok\b.*\b(lets|let's)\b .*\bgo\b")
+messages: list = []
 
 
 # Serve the index.html file
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", messages=messages)
 
 
 # Handle WebSocket connections
@@ -39,6 +40,7 @@ def handle_message(data):
     message = data["message"]
     if regex_pattern.match(message):
         socketio.emit("message", {"message": message})
+        messages.append(message)
 
 
 @socketio.on("play_audio")

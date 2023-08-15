@@ -22,6 +22,14 @@
         </div>
         <div class="chat">
             <div id="chat-box">
+                {% for message in messages %}
+                <div class="message">
+                    <p class="user">Some user:</p>
+                    <p class="content">
+                        {{ message }}
+                    </p>
+                </div>
+                {% endfor %}
             </div>
         </div>
         <form id="chat-form">
