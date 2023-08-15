@@ -83,7 +83,8 @@ button:hover {
     flex-direction: column;
 }
 
-.message-input {
+input {
+    display: block;
     width: 80%;
     margin: 5px auto;
     padding: 0.5rem;
@@ -98,4 +99,31 @@ button:hover {
 #chat-input-error {
     text-align: center;
     color: red;
+}
+
+/* Style for the modal */
+.modal {
+    display: block;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Style for the modal content */
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 20%;
+    position: relative;
 }

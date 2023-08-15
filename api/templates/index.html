@@ -8,6 +8,15 @@
 </head>
 
 <body>
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <form id="modal-form">
+                <h2>Enter your name:</h2>
+                <input type="text" id="modal-input" placeholder="Name">
+                <button id="modal-button" type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
     <div class="container">
         <h1>OK LET'S GO</h1>
         <button id="play-button">OK LET'S GO</button>
@@ -24,94 +33,110 @@
             <div id="chat-box">
                 {% for message in messages %}
                 <div class="message">
-                    <p class="user">Some user:</p>
+                    <p class="user">{{ message.sender }}:</p>
                     <p class="content">
-                        {{ message }}
+                        {{ message.content }}
                     </p>
                 </div>
                 {% endfor %}
             </div>
         </div>
         <form id="chat-form">
-            <input id="chat-input" type="text" placeholder="Type your message here..." class="message-input">
+            <input id="chat-input" type="text" placeholder="Type your message here...">
             <div id="chat-input-error"></div>
         </form>
     </div>
     <script type="text/javascript">
-        var socket = io.connect();
-        var audio = new Audio(window.location.origin + '/static/OK_LETS_GO.mp3');
-        var audio2 = new Audio(window.location.origin + '/static/okay_lets_go_dj.mp3');
-        var audio3 = new Audio(window.location.origin + '/static/okay_lets_go_rob.mp3');
-        var audio4 = new Audio(window.location.origin + '/static/okay_lets_die.mp3');
+        document.addEventListener('DOMContentLoaded', function () {
+            var socket = io.connect();
+            var audio = new Audio(window.location.origin + '/static/OK_LETS_GO.mp3');
+            var audio2 = new Audio(window.location.origin + '/static/okay_lets_go_dj.mp3');
+            var audio3 = new Audio(window.location.origin + '/static/okay_lets_go_rob.mp3');
+            var audio4 = new Audio(window.location.origin + '/static/okay_lets_die.mp3');
 
-        // Button click event handler
-        document.getElementById('play-button').addEventListener('click', function () {
-            socket.emit('play_audio');
-        });
-        document.getElementById('play-button-2').addEventListener('click', function () {
-            socket.emit('play_audio_2');
-        });
-        document.getElementById('play-button-3').addEventListener('click', function () {
-            socket.emit('play_audio_3');
-        });
-        document.getElementById('play-button-4').addEventListener('click', function () {
-            socket.emit('play_audio_4');
-        });
-        console.log(window.location.origin)
-        // WebSocket event handler
-        socket.on('play_audio', function () {
-            // Play the audio file
-            audio.play();
-        });
-        socket.on('play_audio_2', function () {
-            // Play the audio file
-            audio2.play();
-        });
-        socket.on('play_audio_3', function () {
-            // Play the audio file
-            audio3.play();
-        });
-        socket.on('play_audio_4', function () {
-            // Play the audio file
-            audio4.play();
-        });
-        socket.on('update_online_count', function (data) {
-            document.getElementById('user-online').innerText = data.count;
-        });
+            // Button click event handler
+            document.getElementById('play-button').addEventListener('click', function () {
+                socket.emit('play_audio');
+            });
+            document.getElementById('play-button-2').addEventListener('click', function () {
+                socket.emit('play_audio_2');
+            });
+            document.getElementById('play-button-3').addEventListener('click', function () {
+                socket.emit('play_audio_3');
+            });
+            document.getElementById('play-button-4').addEventListener('click', function () {
+                socket.emit('play_audio_4');
+            });
+            console.log(window.location.origin)
+            // WebSocket event handler
+            socket.on('play_audio', function () {
+                // Play the audio file
+                audio.play();
+            });
+            socket.on('play_audio_2', function () {
+                // Play the audio file
+                audio2.play();
+            });
+            socket.on('play_audio_3', function () {
+                // Play the audio file
+                audio3.play();
+            });
+            socket.on('play_audio_4', function () {
+                // Play the audio file
+                audio4.play();
+            });
+            socket.on('update_online_count', function (data) {
+                document.getElementById('user-online').innerText = data.count;
+            });
 
-        socket.on('message', function (data) {
-            var chatDiv = document.getElementById('chat-box');
-            chatDiv.innerHTML += '<div class="message"><p class="user">Some user:</p><p class="content">' + data.message + '</p></div>'
-        });
+            socket.on('message', function (data) {
+                var chatDiv = document.getElementById('chat-box');
+                chatDiv.innerHTML += '<div class="message"><p class="user">' + data.message.sender + ':</p><p class="content">' + data.message.content + '</p></div>'
+            });
 
-        // Function to handle form submission
-        function handleSubmit(event) {
-            event.preventDefault();
+            // Function to handle form submission
+            function handleSubmit(event) {
+                event.preventDefault();
 
-            // Get the input value from the form
-            const inputElement = document.getElementById("chat-input");
-            const inputErrorElement = document.getElementById("chat-input-error");
-            const message = inputElement.value.trim();
+                // Get the input value from the form
+                const inputElement = document.getElementById("chat-input");
+                const inputErrorElement = document.getElementById("chat-input-error");
+                const message = inputElement.value.trim();
 
-            // Don't send an empty message
-            if (!message) {
-                return;
+                // Don't send an empty message
+                if (!message) {
+                    return;
+                }
+
+                const regexPattern = /\bok\b.*\b(lets|let's)\b .*\bgo\b/gi;
+                // Check if the message at least contains ok lets go.
+                if (regexPattern.test(message)) {
+                    socket.emit('message', { message: message });
+                    inputElement.value = '';
+                    inputErrorElement.innerHTML = '';
+                } else {
+                    inputErrorElement.innerHTML = '<p>Please at least use "ok lets go" in your message.</p>'
+                }
+
+            }
+            // Attach the form submission event listener
+            const chatForm = document.getElementById("chat-form");
+            chatForm.addEventListener("submit", handleSubmit);
+
+            function handleModalSubmit(event) {
+                event.preventDefault();
+                const modalInput = document.getElementById('modal-input');
+                const inputData = modalInput.value;
+                modal.style.display = 'none';
+                socket.emit('set_name', { name: inputData });
             }
 
-            const regexPattern = /\bok\b.*\b(lets|let's)\b .*\bgo\b/gi;
-            // Check if the message at least contains ok lets go.
-            if (regexPattern.test(message)) {
-                socket.emit('message', { message: message });
-                inputElement.value = '';
-                inputErrorElement.innerHTML = '';
-            } else {
-                inputErrorElement.innerHTML = '<p>Please at least use "ok lets go" in your message.</p>'
-            }
-
-        }
-        // Attach the form submission event listener
-        const formElement = document.getElementById("chat-form");
-        formElement.addEventListener("submit", handleSubmit);
+            const modal = document.getElementById('modal');
+            const modalForm = document.getElementById("modal-form");
+            modalForm.addEventListener("submit", handleModalSubmit);
+            const modalButton = document.getElementById('modal-button');
+            modalButton.addEventListener('click', handleModalSubmit);
+        });
     </script>
 </body>
 
