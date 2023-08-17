@@ -126,4 +126,5 @@ input {
     border: 1px solid #888;
     width: 20%;
     position: relative;
+    border-radius: 8px;
 }
