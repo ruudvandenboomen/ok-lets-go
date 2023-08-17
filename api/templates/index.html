@@ -47,6 +47,11 @@
         </form>
     </div>
     <script type="text/javascript">
+        // Function to update the tab title with a count
+        function updateTabTitle(count) {
+            document.title = count > 0 ? `(${count}) New Messages` : "OK LET'S GO";
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             var socket = io.connect();
             var audio = new Audio(window.location.origin + '/static/OK_LETS_GO.mp3');
@@ -88,10 +93,12 @@
             socket.on('update_online_count', function (data) {
                 document.getElementById('user-online').innerText = data.count;
             });
-
+            let messageCount = 0
             socket.on('message', function (data) {
                 var chatDiv = document.getElementById('chat-box');
                 chatDiv.innerHTML += '<div class="message"><p class="user">' + data.message.sender + ':</p><p class="content">' + data.message.content + '</p></div>'
+                messageCount += 1
+                updateTabTitle(messageCount); // To indicate new messages
             });
 
             // Function to handle form submission
