@@ -12,7 +12,7 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 socketio = SocketIO(app)
 
 online_users = dict()
-regex_pattern = re.compile(r"(?i)\bok\b.*\b(lets|let's)\b .*\bgo\b")
+regex_pattern = re.compile(r"ok.*(lets|let's).*go")
 messages: list = []
 
 

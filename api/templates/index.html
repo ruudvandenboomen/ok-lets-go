@@ -108,7 +108,7 @@
                     return;
                 }
 
-                const regexPattern = /\bok\b.*\b(lets|let's)\b .*\bgo\b/gi;
+                const regexPattern = /ok.*(lets|let's) .*go/;
                 // Check if the message at least contains ok lets go.
                 if (regexPattern.test(message)) {
                     socket.emit('message', { message: message });
