@@ -1,10 +1,9 @@
 [tool.poetry]
-name = "okey-lets-go"
+name = "ok-lets-go"
 version = "0.1.0"
 description = ""
 authors = ["Ruud van den Boomen <ruud.van.den.boomen@sendcloud.com>"]
 readme = "README.md"
-packages = [{include = "okey_lets_go"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
