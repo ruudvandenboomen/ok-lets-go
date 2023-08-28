@@ -128,3 +128,10 @@ input {
     position: relative;
     border-radius: 8px;
 }
+
+#subscribe-button {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    display: none;
+}

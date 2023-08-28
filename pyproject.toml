@@ -13,6 +13,7 @@ eventlet = "^0.33.3"
 gevent = "^22.10.2"
 python-dotenv = "^1.0.0"
 gevent-websocket = "^0.10.1"
+pywebpush = "^1.14.0"
 
 
 [tool.poetry.group.dev.dependencies]

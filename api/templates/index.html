@@ -4,6 +4,7 @@
 <head>
     <title>OK LET'S GO</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static',filename='styles/styles.css') }}">
 </head>
 
@@ -17,6 +18,7 @@
             </form>
         </div>
     </div>
+    <button id="subscribe-button">Subscribe</button>
     <div class="container">
         <h1>OK LET'S GO</h1>
         <button id="play-button">OK LET'S GO</button>
@@ -47,8 +49,15 @@
         </form>
     </div>
     <script type="text/javascript">
+        const subscribeButton = document.getElementById('subscribe-button');
         let messageCount = 0
-
+        let userId;
+        if (localStorage.getItem("userId")) {
+            userId = localStorage.getItem("userId");
+        } else {
+            userId = uuid.v4();
+            localStorage.setItem("userId", userId);
+        }
         // Function to update the tab title with a count
         function updateTabTitle(count) {
             document.title = count > 0 ? `(${count}) New Messages` : "OK LET'S GO";
@@ -62,8 +71,70 @@
             }
         }
 
+        async function checkSubscribed(user_id) {
+            resp = await fetch(`${user_id}/subscribed`, {
+                method: 'GET',
+            });
+            const data = await resp.json()
+            return data.subscribed
+        }
+
+        async function clickSubscriptionButton(subscribed) {
+            try {
+                if (subscribed) {
+                    await unsubscribe();
+                    updateSubscriptionButton(subscribed)
+                } else {
+                    const subscription = await subscribeToPushNotifications();
+                    await subscribe(subscription);
+                    console.log('Subscribed to push notifications:', subscription);
+                }
+                updateSubscriptionButton(!subscribed)
+                return !subscribed
+            } catch (error) {
+                console.error('Error subscribing to push notifications:', error);
+            }
+        }
+
+        async function subscribeToPushNotifications() {
+            // Register a service worker
+            const registration = await navigator.serviceWorker.register(window.location.origin + '/static/scripts/service-worker.js');
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: 'BC9hogcJliz2VuRVejSkMCLCnHSOby7yh5HkINw6zdclo1sReT9v0HSJkqquY-LvKaNMbX8MK27itRu42za4emg',
+            });
+            return subscription
+        }
+
+        async function subscribe(subscription) {
+            // Send the subscription to the backend
+            await fetch(`${userId}/subscribe`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(subscription)
+            });
+        }
+
+        async function unsubscribe() {
+            // Send the subscription to the backend
+            await fetch(`${userId}/unsubscribe`, {
+                method: 'PUT',
+            });
+        }
+
+        function updateSubscriptionButton(subscribed) {
+            if (subscribed) {
+                subscribeButton.textContent = "Unsubscribe";
+            } else {
+                subscribeButton.textContent = "Subscribe";
+            }
+            subscribeButton.style.display = "block";
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
-            var socket = io.connect();
+            var socket = io.connect(window.location.origin, { query: "name=test" });
             var audio = new Audio(window.location.origin + '/static/OK_LETS_GO.mp3');
             var audio2 = new Audio(window.location.origin + '/static/okay_lets_go_dj.mp3');
             var audio3 = new Audio(window.location.origin + '/static/okay_lets_go_rob.mp3');
@@ -82,7 +153,6 @@
             document.getElementById('play-button-4').addEventListener('click', function () {
                 socket.emit('play_audio_4');
             });
-            console.log(window.location.origin)
             // WebSocket event handler
             socket.on('play_audio', function () {
                 // Play the audio file
@@ -133,7 +203,7 @@
                 const regexPattern = /ok.*(lets|let's) .*go/;
                 // Check if the message at least contains ok lets go.
                 if (regexPattern.test(message)) {
-                    socket.emit('message', { message: message });
+                    socket.emit('message', { message: message, user_id: userId });
                     inputElement.value = '';
                     inputErrorElement.innerHTML = '';
                 } else {
@@ -147,17 +217,30 @@
 
             function handleModalSubmit(event) {
                 event.preventDefault();
-                const modalInput = document.getElementById('modal-input');
                 const inputData = modalInput.value;
                 modal.style.display = 'none';
                 socket.emit('set_name', { name: inputData });
             }
 
+            const modalInput = document.getElementById('modal-input');
+            modalInput.focus();
             const modal = document.getElementById('modal');
             const modalForm = document.getElementById("modal-form");
             modalForm.addEventListener("submit", handleModalSubmit);
             const modalButton = document.getElementById('modal-button');
             modalButton.addEventListener('click', handleModalSubmit);
+
+            async function loadSubscription() {
+                let subscribed = await checkSubscribed(userId);
+                updateSubscriptionButton(subscribed)
+                // Check if the browser supports service workers and push notifications
+                if ('serviceWorker' in navigator && 'PushManager' in window) {
+                    subscribeButton.addEventListener('click', async function () {
+                        subscribed = await clickSubscriptionButton(subscribed);
+                    });
+                }
+            }
+            loadSubscription()
         });
     </script>
 </body>
