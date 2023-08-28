@@ -12,7 +12,6 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 socketio = SocketIO(app)
 
-regex_pattern = re.compile(r"ok.*(lets|let's).*go")
 online_users = dict()
 messages: list = []
 subscriptions: dict = {}
@@ -70,28 +69,27 @@ def unsubscribe(user_id):
 def handle_message(data):
     sender_user_id = data["user_id"]
     message = data["message"]
-    if regex_pattern.match(message):
-        name = online_users.get(request.sid, "")
-        message = {
-            "sender": name,
-            "content": message,
-        }
-        socketio.emit("message", {"message": message})
-        messages.append(message)
+    name = online_users.get(request.sid, "")
+    message = {
+        "sender": name,
+        "content": message,
+    }
+    socketio.emit("message", {"message": message})
+    messages.append(message)
 
-        for user_id, subscription in subscriptions.items():
-            if user_id != sender_user_id:
-                try:
-                    webpush(
-                        subscription_info=subscription,
-                        data=message["content"],
-                        vapid_private_key=PRIVATE_KEY,
-                        vapid_claims={"sub": "mailto:ruudvdboomen@hotmail.com"},
-                    )
-                except WebPushException as e:
-                    print("Error sending notification:", e)
+    for user_id, subscription in subscriptions.items():
+        if user_id != sender_user_id:
+            try:
+                webpush(
+                    subscription_info=subscription,
+                    data=message["content"],
+                    vapid_private_key=PRIVATE_KEY,
+                    vapid_claims={"sub": "mailto:ruudvdboomen@hotmail.com"},
+                )
+            except WebPushException as e:
+                print("Error sending notification:", e)
 
-        return jsonify({"message": "Notifications sent successfully"})
+    return jsonify({"message": "Notifications sent successfully"})
 
 
 @socketio.on("set_name")

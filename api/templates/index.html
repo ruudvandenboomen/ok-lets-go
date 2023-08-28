@@ -200,16 +200,9 @@
                     return;
                 }
 
-                const regexPattern = /ok.*(lets|let's) .*go/;
-                // Check if the message at least contains ok lets go.
-                if (regexPattern.test(message)) {
-                    socket.emit('message', { message: message, user_id: userId });
-                    inputElement.value = '';
-                    inputErrorElement.innerHTML = '';
-                } else {
-                    inputErrorElement.innerHTML = '<p>Please at least use "ok lets go" in your message.</p>'
-                }
-
+                socket.emit('message', { message: message, user_id: userId });
+                inputElement.value = '';
+                inputErrorElement.innerHTML = '';
             }
             // Attach the form submission event listener
             const chatForm = document.getElementById("chat-form");
