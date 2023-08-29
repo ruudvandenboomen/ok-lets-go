@@ -1,8 +1,7 @@
 import os
-import re
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, request, send_from_directory, abort
+from flask import Flask, abort, jsonify, render_template, request, send_from_directory
 from flask_socketio import SocketIO
 from pywebpush import WebPushException, webpush
 
