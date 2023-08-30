@@ -4,11 +4,16 @@ from dotenv import load_dotenv
 from flask import Flask, abort, jsonify, render_template, request, send_from_directory
 from flask_socketio import SocketIO
 from pywebpush import WebPushException, webpush
+import requests
 
 load_dotenv()
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+
+SMIIRL_MAC = os.getenv("SMIIRL_MAC")
+SMIIRL_TOKEN = os.getenv("SMIIRL_TOKEN")
+
 socketio = SocketIO(app)
 
 online_users = dict()
@@ -20,6 +25,23 @@ PUBLIC_KEY = os.getenv("PUBLIC_KEY")
 PRIVATE_KEY = os.getenv("PRIVATE_KEY")
 
 
+def send_number_to_smiirl(number: int) -> None:
+    url = f"https://api.smiirl.com/{SMIIRL_MAC}/set-number/{SMIIRL_TOKEN}/{number}"
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an exception if the request wasn't successful
+        
+        print(f"Send request to api.smiirl.com: {number}")
+    except requests.exceptions.RequestException as e:
+        print("Error:", e)
+
+
+def _handle_user_list_changed(users: dict) -> None:
+    user_count = len(users)
+    socketio.emit("update_online_count", {"count": user_count})
+    send_number_to_smiirl(user_count)
+
 # Serve the index.html file
 @app.route("/")
 def index():
@@ -29,7 +51,7 @@ def index():
 @socketio.on("disconnect")
 def handle_disconnect():
     online_users.pop(request.sid, None)
-    socketio.emit("update_online_count", {"count": len(online_users)})
+    _handle_user_list_changed(online_users)
 
 
 @app.route("/<user_id>/subscribed", methods=["GET"])
@@ -94,7 +116,7 @@ def handle_message(data):
 @socketio.on("set_name")
 def handle_set_name(data):
     online_users[request.sid] = data["name"]
-    socketio.emit("update_online_count", {"count": len(online_users)})
+    _handle_user_list_changed(online_users)
 
 
 @socketio.on("play_audio")
@@ -131,4 +153,4 @@ def serve_static(filename):
 
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", debug=True)
+    socketio.run(app, host="127.0.0.1", debug=True)
