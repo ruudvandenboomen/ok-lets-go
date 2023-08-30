@@ -5,7 +5,12 @@
     <title>OK LET'S GO</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static',filename='styles/styles.css') }}">
+    <link rel="stylesheet" href="../static/styles/styles.css">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="../static/images/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="../static/images/icon-512x512.png">
+    <!-- Reference to the Web App Manifest -->
+    <link rel="manifest" href="../static/pwa/manifest.json">
 </head>
 
 <body>
@@ -97,6 +102,7 @@
 
         async function subscribeToPushNotifications() {
             // Register a service worker
+            const permission = await Notification.requestPermission();
             const registration = await navigator.serviceWorker.register(window.location.origin + '/static/scripts/service-worker.js');
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
