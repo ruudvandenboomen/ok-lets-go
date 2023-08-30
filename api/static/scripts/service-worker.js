@@ -1,8 +1,8 @@
 self.addEventListener('push', function (event) {
     const options = {
         body: event.data.text(),
-        icon: 'https://ok-lets-go.ruudvandenboomen.nl//static/images/ok-lets-go.png',
-        badge: 'https://ok-lets-go.ruudvandenboomen.nl//static/images/ok-lets-go.png',
+        icon: 'https://ok-lets-go.ruudvandenboomen.nl//static/images/icon-96x96.png',
+        badge: 'https://ok-lets-go.ruudvandenboomen.nl//static/images/icon-96x96.png',
         data: {
             url: 'https://ok-lets-go.ruudvandenboomen.nl/'
         }
