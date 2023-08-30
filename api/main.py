@@ -153,4 +153,4 @@ def serve_static(filename):
 
 
 if __name__ == "__main__":
-    socketio.run(app, host="127.0.0.1", debug=True)
+    socketio.run(app, host="0.0.0.0", debug=True)
