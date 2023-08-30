@@ -215,13 +215,17 @@
 
             function handleModalSubmit(event) {
                 event.preventDefault();
-                const inputData = modalInput.value;
+                const username = modalInput.value;
                 modal.style.display = 'none';
-                socket.emit('set_name', { name: inputData });
+                socket.emit('set_name', { name: username });
+                localStorage.setItem("username", username);
             }
 
             const modalInput = document.getElementById('modal-input');
             modalInput.focus();
+            if (localStorage.getItem("username")) {
+                modalInput.value = localStorage.getItem("username");
+            }
             const modal = document.getElementById('modal');
             const modalForm = document.getElementById("modal-form");
             modalForm.addEventListener("submit", handleModalSubmit);
