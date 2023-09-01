@@ -39,7 +39,7 @@
             <div id="chat-box">
                 {% for message in messages %}
                 <div class="message">
-                    <p class="user">{{ message.sender }}:</p>
+                    <p class="user">{{ message.user }}:</p>
                     <p class="content">
                         {{ message.content }}
                     </p>
@@ -184,7 +184,7 @@
 
             socket.on('message', function (data) {
                 var chatDiv = document.getElementById('chat-box');
-                chatDiv.innerHTML += '<div class="message"><p class="user">' + data.message.sender + ':</p><p class="content">' + data.message.content + '</p></div>'
+                chatDiv.innerHTML += '<div class="message"><p class="user">' + data.message.user + ':</p><p class="content">' + data.message.content + '</p></div>'
                 if (document.visibilityState !== "visible") {
                     messageCount += 1
                     updateTabTitle(messageCount);

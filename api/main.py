@@ -1,10 +1,11 @@
 import os
 
+import requests
 from dotenv import load_dotenv
 from flask import Flask, abort, jsonify, render_template, request, send_from_directory
 from flask_socketio import SocketIO
+from history import HistoryFirebase
 from pywebpush import WebPushException, webpush
-import requests
 
 load_dotenv()
 
@@ -17,21 +18,24 @@ SMIIRL_TOKEN = os.getenv("SMIIRL_TOKEN")
 socketio = SocketIO(app)
 
 online_users = dict()
-messages: list = []
 subscriptions: dict = {}
 
 # For push notifications
 PUBLIC_KEY = os.getenv("PUBLIC_KEY")
 PRIVATE_KEY = os.getenv("PRIVATE_KEY")
 
+FIREBASE_DSN = os.getenv("FIREBASE_DSN")
+FIREBASE_AUTH = os.getenv("FIREBASE_AUTH")
+history = HistoryFirebase(FIREBASE_DSN, FIREBASE_AUTH)
+
 
 def send_number_to_smiirl(number: int) -> None:
     url = f"https://api.smiirl.com/{SMIIRL_MAC}/set-number/{SMIIRL_TOKEN}/{number}"
-    
+
     try:
         response = requests.get(url)
         response.raise_for_status()  # Raise an exception if the request wasn't successful
-        
+
         print(f"Send request to api.smiirl.com: {number}")
     except requests.exceptions.RequestException as e:
         print("Error:", e)
@@ -42,10 +46,11 @@ def _handle_user_list_changed(users: dict) -> None:
     socketio.emit("update_online_count", {"count": user_count})
     send_number_to_smiirl(user_count)
 
+
 # Serve the index.html file
 @app.route("/")
 def index():
-    return render_template("index.html", messages=messages)
+    return render_template("index.html", messages=history.get_items(300))
 
 
 @socketio.on("disconnect")
@@ -92,11 +97,11 @@ def handle_message(data):
     message = data["message"]
     name = online_users.get(request.sid, "")
     message = {
-        "sender": name,
+        "user": name,
         "content": message,
     }
     socketio.emit("message", {"message": message})
-    messages.append(message)
+    history.insert(user=name, content=message["content"])
 
     for user_id, subscription in subscriptions.items():
         if user_id != sender_user_id:
