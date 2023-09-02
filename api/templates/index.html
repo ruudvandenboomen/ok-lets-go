@@ -37,9 +37,17 @@
         </div>
         <div class="chat">
             <div id="chat-box">
+                {% set ns = namespace(current_date = None) %}
                 {% for message in messages %}
+                {% if ns.current_date != message.datetime.date() %}
+                <div class="date">{{ message.datetime.strftime('%d-%m-%Y') }}</div>
+                {% set ns.current_date = message.datetime.date() %}
+                {% endif %}
                 <div class="message">
-                    <p class="user">{{ message.user }}:</p>
+                    <div class="message-header"> 
+                        <p class="user">{{ message.user }}:</p>
+                        <div class="time">{{ message.datetime.strftime('%H:%S') }}</div>
+                    </div>
                     <p class="content">
                         {{ message.content }}
                     </p>

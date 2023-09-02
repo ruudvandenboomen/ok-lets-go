@@ -2,6 +2,7 @@ import abc
 import logging
 import time
 import urllib
+from datetime import datetime
 
 import pydantic
 import requests
@@ -14,6 +15,11 @@ class Message(pydantic.BaseModel):
     user: str
     content: str
     timestamp: float
+
+    @property
+    def datetime(self) -> datetime:
+        """Convert timestamp to datetime"""
+        return datetime.fromtimestamp(self.timestamp)
 
 
 class HistoryInterface(abc.ABC):
@@ -35,7 +41,7 @@ class HistoryFirebase(HistoryInterface):
         self.dsn = dsn
         self.auth_token = auth_token
 
-    def __get_urt(self) -> str:
+    def __get_url(self) -> str:
         path = f"{HistoryFirebase.TABLE_PATH}.json"
         return urllib.parse.urljoin(self.dsn, path)
 
@@ -46,7 +52,7 @@ class HistoryFirebase(HistoryInterface):
     def insert(self, user: str, content: str) -> None:
         timestamp = HistoryFirebase.__get_current_timestamp()
         message = Message(user=user, content=content, timestamp=timestamp)
-        url = self.__get_urt()
+        url = self.__get_url()
 
         params = {"auth": self.auth_token}
         data = message.model_dump()
@@ -59,7 +65,7 @@ class HistoryFirebase(HistoryInterface):
             )
 
     def get_items(self, limit: int) -> list[Message]:
-        url = self.__get_urt()
+        url = self.__get_url()
 
         params = {
             "orderBy": '"timestamp"',
@@ -86,7 +92,7 @@ class HistoryFirebase(HistoryInterface):
             try:
                 message = Message(**item_data)
             except ValidationError as e:
-                logger.error(f"Error parce history message, id={key}, {e}")
+                logger.error(f"Error parse history message, id={key}, {e}")
                 continue
             messages.append(message)
 

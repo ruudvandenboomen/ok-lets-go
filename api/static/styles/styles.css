@@ -2,7 +2,7 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-image: url('/static/okay-lets.gif');
+    background-image: url('../okay-lets.gif');
     background-repeat: no-repeat;
     background-size: cover;
     display: flex;
@@ -77,7 +77,9 @@ button:hover {
     border-bottom: 1px solid #e2e8f0;
     padding-bottom: 0.5rem;
     margin-bottom: 0.5rem;
-    word-wrap: break-word
+    word-wrap: break-word;
+    display: flex;
+    flex-direction: column;
 }
 
 .user {
@@ -89,6 +91,7 @@ button:hover {
 .content {
     color: #2d3748;
     margin: 0;
+    text-align: left;
 }
 
 #chat-form {
@@ -112,6 +115,10 @@ input {
 #chat-input-error {
     text-align: center;
     color: red;
+}
+
+#chat-box {
+    text-align: center;
 }
 
 /* Style for the modal */
@@ -147,4 +154,22 @@ input {
     bottom: 10px;
     right: 10px;
     display: none;
+}
+
+.date {
+    text-align: center;
+    display: inline-block;
+    background-color: white;
+    padding: 2px 4px;
+    border-radius: 5px;
+    color: #474747;
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+}
+
+.time {
+    color: #737d8e;
 }
