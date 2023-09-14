@@ -7,6 +7,7 @@ from datetime import datetime
 import pydantic
 import requests
 from pydantic_core import ValidationError
+import pytz
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,9 @@ class Message(pydantic.BaseModel):
     @property
     def datetime(self) -> datetime:
         """Convert timestamp to datetime"""
-        return datetime.fromtimestamp(self.timestamp)
+        return datetime.fromtimestamp(
+            self.timestamp, tz=pytz.timezone("Europe/Amsterdam")
+        )
 
 
 class HistoryInterface(abc.ABC):

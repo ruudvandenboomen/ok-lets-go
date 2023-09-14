@@ -16,6 +16,7 @@ gevent-websocket = "^0.10.1"
 pywebpush = "^1.14.0"
 requests = "^2.31.0"
 pydantic = "^2.3.0"
+pytz = "^2023.3.post1"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -86,6 +86,7 @@ button:hover {
     color: #718096;
     font-weight: bold;
     margin: 0;
+    text-align: left;
 }
 
 .content {
