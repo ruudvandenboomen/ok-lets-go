@@ -8,7 +8,7 @@ poetry shell
 ```
 
 ```
-python3 ./api/main.py
+python3 ./api/app.py
 ```
 
 ## Deployment

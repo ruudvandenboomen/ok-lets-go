@@ -5,9 +5,10 @@ import urllib
 from datetime import datetime
 
 import pydantic
-import requests
-from pydantic_core import ValidationError
 import pytz
+import requests
+from extensions import db
+from pydantic_core import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,25 @@ class Message(pydantic.BaseModel):
         )
 
 
+class PostgresMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user = db.Column(db.String())
+    content = db.Column(db.String())
+    timestamp = db.Column(db.Float())
+
+    def __init__(self, user: str, content: str, timestamp: float):
+        self.user = user
+        self.content = content
+        self.timestamp = timestamp
+
+    def __repr__(self):
+        return f"<Message {self.content}>"
+
+
 class HistoryInterface(abc.ABC):
+    def _get_current_timestamp(self) -> float:
+        return time.time()
+
     @abc.abstractmethod
     def insert(self, user: str, content: str) -> None:
         """Insert one history message."""
@@ -48,12 +67,8 @@ class HistoryFirebase(HistoryInterface):
         path = f"{HistoryFirebase.TABLE_PATH}.json"
         return urllib.parse.urljoin(self.dsn, path)
 
-    @staticmethod
-    def __get_current_timestamp() -> float:
-        return time.time()
-
     def insert(self, user: str, content: str) -> None:
-        timestamp = HistoryFirebase.__get_current_timestamp()
+        timestamp = self._get_current_timestamp()
         message = Message(user=user, content=content, timestamp=timestamp)
         url = self.__get_url()
 
@@ -100,4 +115,27 @@ class HistoryFirebase(HistoryInterface):
             messages.append(message)
 
         messages.sort(key=lambda message: message.timestamp)
+        return messages
+
+
+class HistoryPostgres(HistoryInterface):
+    def insert(self, user: str, content: str) -> None:
+        timestamp = self._get_current_timestamp()
+        message = PostgresMessage(user=user, content=content, timestamp=timestamp)
+        db.session.add(message)
+        db.session.commit()
+
+    def get_items(self, limit: int) -> list[Message]:
+        database_messages = (
+            PostgresMessage.query.order_by(PostgresMessage.timestamp).limit(limit).all()
+        )
+        messages = []
+        for message in database_messages:
+            try:
+                message = Message(**message.__dict__)
+            except ValidationError as e:
+                logger.error(f"Error parse history message, id={message}, {e}")
+                continue
+            messages.append(message)
+
         return messages

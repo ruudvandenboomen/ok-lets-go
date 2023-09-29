@@ -1,10 +1,12 @@
 import os
+from typing import Type
 
 import requests
 from dotenv import load_dotenv
+from extensions import db, migrate
 from flask import Flask, abort, jsonify, render_template, request, send_from_directory
 from flask_socketio import SocketIO
-from history import HistoryFirebase
+from history import HistoryInterface, HistoryPostgres
 from pywebpush import WebPushException, webpush
 
 load_dotenv()
@@ -26,14 +28,19 @@ PRIVATE_KEY = os.getenv("PRIVATE_KEY")
 
 FIREBASE_DSN = os.getenv("FIREBASE_DSN")
 FIREBASE_AUTH = os.getenv("FIREBASE_AUTH")
-history = HistoryFirebase(FIREBASE_DSN, FIREBASE_AUTH)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+db.init_app(app)
+migrate.init_app(app, db)
+
+history: Type[HistoryInterface] = HistoryPostgres()
 
 
 def send_number_to_smiirl(number: int) -> None:
     url = f"https://api.smiirl.com/{SMIIRL_MAC}/set-number/{SMIIRL_TOKEN}/{number}"
 
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=1)
         response.raise_for_status()  # Raise an exception if the request wasn't successful
 
         print(f"Send request to api.smiirl.com: {number}")
