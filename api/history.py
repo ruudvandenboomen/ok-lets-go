@@ -13,7 +13,7 @@ from pydantic_core import ValidationError
 logger = logging.getLogger(__name__)
 
 
-class Message(pydantic.BaseModel):
+class MessageDTO(pydantic.BaseModel):
     user: str
     content: str
     timestamp: float
@@ -26,7 +26,9 @@ class Message(pydantic.BaseModel):
         )
 
 
-class PostgresMessage(db.Model):
+class Message(db.Model):
+    __tablename__ = "messages"
+
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.String())
     content = db.Column(db.String())
@@ -51,7 +53,7 @@ class HistoryInterface(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_items(self, limit: int) -> list[Message]:
+    def get_items(self, limit: int) -> list[MessageDTO]:
         """Get history messages limited by limit arg."""
         pass
 
@@ -69,7 +71,7 @@ class HistoryFirebase(HistoryInterface):
 
     def insert(self, user: str, content: str) -> None:
         timestamp = self._get_current_timestamp()
-        message = Message(user=user, content=content, timestamp=timestamp)
+        message = MessageDTO(user=user, content=content, timestamp=timestamp)
         url = self.__get_url()
 
         params = {"auth": self.auth_token}
@@ -82,7 +84,7 @@ class HistoryFirebase(HistoryInterface):
                 f"Error insert history message, {e}",
             )
 
-    def get_items(self, limit: int) -> list[Message]:
+    def get_items(self, limit: int) -> list[MessageDTO]:
         url = self.__get_url()
 
         params = {
@@ -108,7 +110,7 @@ class HistoryFirebase(HistoryInterface):
 
         for key, item_data in data.items():
             try:
-                message = Message(**item_data)
+                message = MessageDTO(**item_data)
             except ValidationError as e:
                 logger.error(f"Error parse history message, id={key}, {e}")
                 continue
@@ -121,18 +123,16 @@ class HistoryFirebase(HistoryInterface):
 class HistoryPostgres(HistoryInterface):
     def insert(self, user: str, content: str) -> None:
         timestamp = self._get_current_timestamp()
-        message = PostgresMessage(user=user, content=content, timestamp=timestamp)
+        message = Message(user=user, content=content, timestamp=timestamp)
         db.session.add(message)
         db.session.commit()
 
-    def get_items(self, limit: int) -> list[Message]:
-        database_messages = (
-            PostgresMessage.query.order_by(PostgresMessage.timestamp).limit(limit).all()
-        )
+    def get_items(self, limit: int) -> list[MessageDTO]:
+        database_messages = Message.query.order_by(Message.timestamp).limit(limit).all()
         messages = []
         for message in database_messages:
             try:
-                message = Message(**message.__dict__)
+                message = MessageDTO(**message.__dict__)
             except ValidationError as e:
                 logger.error(f"Error parse history message, id={message}, {e}")
                 continue

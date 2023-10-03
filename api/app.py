@@ -8,6 +8,7 @@ from flask import Flask, abort, jsonify, render_template, request, send_from_dir
 from flask_socketio import SocketIO
 from history import HistoryInterface, HistoryPostgres
 from pywebpush import WebPushException, webpush
+from subscriptions import SubscriptionInterface, SubscriptionRepository
 
 load_dotenv()
 
@@ -20,7 +21,6 @@ SMIIRL_TOKEN = os.getenv("SMIIRL_TOKEN")
 socketio = SocketIO(app)
 
 online_users = dict()
-subscriptions: dict = {}
 
 # For push notifications
 PUBLIC_KEY = os.getenv("PUBLIC_KEY")
@@ -34,6 +34,7 @@ db.init_app(app)
 migrate.init_app(app, db)
 
 history: Type[HistoryInterface] = HistoryPostgres()
+subscription_repository: Type[SubscriptionInterface] = SubscriptionRepository()
 
 
 def send_number_to_smiirl(number: int) -> None:
@@ -68,7 +69,7 @@ def handle_disconnect():
 
 @app.route("/<user_id>/subscribed", methods=["GET"])
 def subscribed_check(user_id):
-    if user_id in subscriptions:
+    if subscription_repository.is_subscribed(user_id):
         return jsonify({"subscribed": True})
     return jsonify({"subscribed": False})
 
@@ -79,7 +80,12 @@ def subscribe(user_id):
 
     if user_id:
         # Store the subscription details
-        subscriptions[user_id] = subscription
+        subscription_repository.insert(
+            endpoint=subscription["endpoint"],
+            auth=subscription["keys"]["auth"],
+            p256dh=subscription["keys"]["p256dh"],
+            user_id=user_id,
+        )
         return jsonify({"message": "Subscribed successfully"})
     else:
         return jsonify({"error": "User ID not provided"})
@@ -90,7 +96,7 @@ def unsubscribe(user_id):
     if user_id:
         try:
             # Remove the subscription details
-            subscriptions.pop(user_id)
+            subscription_repository.remove(user_id)
         except KeyError:
             abort(400, description="Bad request: invalid User ID.")
         return jsonify({"message": "Unsubscribed successfully"})
@@ -110,17 +116,16 @@ def handle_message(data):
     socketio.emit("message", {"message": message})
     history.insert(user=name, content=message["content"])
 
-    for user_id, subscription in subscriptions.items():
-        if user_id != sender_user_id:
-            try:
-                webpush(
-                    subscription_info=subscription,
-                    data=message["content"],
-                    vapid_private_key=PRIVATE_KEY,
-                    vapid_claims={"sub": "mailto:ruudvdboomen@hotmail.com"},
-                )
-            except WebPushException as e:
-                print("Error sending notification:", e)
+    for subscription in subscription_repository.get_all_other_users(sender_user_id):
+        try:
+            webpush(
+                subscription_info=subscription.model_dump(),
+                data=message["content"],
+                vapid_private_key=PRIVATE_KEY,
+                vapid_claims={"sub": "mailto:ruudvdboomen@hotmail.com"},
+            )
+        except WebPushException as e:
+            print("Error sending notification:", e)
 
     return jsonify({"message": "Notifications sent successfully"})
 
